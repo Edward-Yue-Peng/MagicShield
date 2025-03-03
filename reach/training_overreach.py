@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-from overreach.feature_extraction import extract_features
+from reach.feature_extraction import extract_features
 
 
 # 随机森林模型，长臂判断，需要读取tick，ping，rotation，distance
@@ -63,7 +63,7 @@ def main():
     print(classification_report(y_test, y_pred))
     # 导出
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"model/overreach_detector_model_{timestamp}.joblib"
+    filename = f"model/reach_detect_model_{timestamp}.joblib"
     dump(clf, filename)
     print(f"Model exported to {filename}")
 
