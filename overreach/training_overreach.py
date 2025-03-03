@@ -10,40 +10,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
+from overreach.feature_extraction import extract_features
+
+
 # 随机森林模型，长臂判断，需要读取tick，ping，rotation，distance
-
-def extract_features(file_path):
-    """
-    读取csv
-    现在csv有tick，攻击距离，延迟和旋转
-    csv处理的代码在data_process.py中
-    """
-    try:
-        df = pd.read_csv(file_path)
-    except Exception as e:
-        print(f'Failed to read file {file_path}: {e}')
-        return None
-
-    # 解析
-    df['ping'] = df['Ping'].apply(lambda x: ast.literal_eval(x)['ping'] if pd.notnull(x) else np.nan)
-    df['yaw'] = df['Rotation'].apply(lambda x: ast.literal_eval(x)['yaw'] if pd.notnull(x) else np.nan)
-    df['pitch'] = df['Rotation'].apply(lambda x: ast.literal_eval(x)['pitch'] if pd.notnull(x) else np.nan)
-
-    # 填充缺失值（一般情况下应该不会出现）
-    df[['Distance', 'ping', 'yaw', 'pitch']] = df[['Distance', 'ping', 'yaw', 'pitch']].fillna(0)
-
-    # 计算统计特征：均值、标准差、最小值、最大值
-    features = {}
-    for col in ['Distance', 'ping', 'yaw', 'pitch']:
-        features[f'{col}_mean'] = df[col].mean()
-        features[f'{col}_std'] = df[col].std()
-        features[f'{col}_min'] = df[col].min()
-        features[f'{col}_max'] = df[col].max()
-
-    # 一个很重要的特征，这个对局有多少个超过3的攻击距离的tick
-    features['num_ticks'] = len(df)
-
-    return features
 
 def load_dataset():
     """

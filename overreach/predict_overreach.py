@@ -7,24 +7,7 @@ import pandas as pd
 import numpy as np
 from joblib import load
 
-def extract_features_for_inference(csv_path):
-    try:
-        df = pd.read_csv(csv_path)
-    except Exception as e:
-        print(f"Failed to read file {csv_path}: {e}")
-        return None
-
-    df['ping'] = df['Ping'].apply(lambda x: ast.literal_eval(x)['ping'] if pd.notnull(x) else np.nan)
-    df['yaw'] = df['Rotation'].apply(lambda x: ast.literal_eval(x)['yaw'] if pd.notnull(x) else np.nan)
-    df['pitch'] = df['Rotation'].apply(lambda x: ast.literal_eval(x)['pitch'] if pd.notnull(x) else np.nan)
-
-    df[['Distance', 'ping', 'yaw', 'pitch']] = df[['Distance', 'ping', 'yaw', 'pitch']].fillna(0)
-
-    features = {f'{col}_{stat}': getattr(df[col], stat)() for col in ['Distance', 'ping', 'yaw', 'pitch']
-                for stat in ['mean', 'std', 'min', 'max']}
-
-    features['num_ticks'] = len(df)
-    return features
+from overreach.feature_extraction import extract_features
 
 
 def load_latest_model(model_dir="model"):
@@ -43,8 +26,8 @@ def load_latest_model(model_dir="model"):
         return None
 
 
-def process_csv_folder(csv_folder, model_dir="model", threshold=0.8):
-    csv_files = glob.glob(f"{csv_folder}/*.csv")
+def process_csv_folder(csv_folder_path, model_dir="model", threshold=0.8):
+    csv_files = glob.glob(f"{csv_folder_path}/*.csv")
     if not csv_files:
         print("No CSV files found in the folder.")
         return
@@ -55,7 +38,7 @@ def process_csv_folder(csv_folder, model_dir="model", threshold=0.8):
         return
 
     for csv_file in csv_files:
-        feat_dict = extract_features_for_inference(csv_file)
+        feat_dict = extract_features(csv_file)
         if feat_dict is None:
             print(f"Skipping file {csv_file} due to extraction failure.")
             continue
