@@ -68,5 +68,5 @@ def process_csv_folder(csv_folder, model_dir="model", threshold=0.8):
 
 
 if __name__ == "__main__":
-    csv_folder = "data/processCSV/normal"
+    csv_folder = "data/testCSV"
     process_csv_folder(csv_folder)
