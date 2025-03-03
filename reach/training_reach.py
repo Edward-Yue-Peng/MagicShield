@@ -63,7 +63,7 @@ def main():
     print(classification_report(y_test, y_pred))
     # 导出
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"model/reach_detect_model_{timestamp}.joblib"
+    filename = f"model/reach_detect_{len(data)}_model_{timestamp}.joblib"
     dump(clf, filename)
     print(f"Model exported to {filename}")
 
