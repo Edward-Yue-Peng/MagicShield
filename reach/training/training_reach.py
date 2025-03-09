@@ -145,4 +145,4 @@ def train_reach(data_folder_path, threshold=0.75):
 if __name__ == "__main__":
     # 示例调用
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    train_reach(base_path, threshold=0.65)
+    train_reach(base_path, threshold=0.7)
