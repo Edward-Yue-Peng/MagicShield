@@ -37,8 +37,8 @@ def extract_features(csv_path):
     # 计算全局特征
     features = {
         # 'relative_speed_max': df['relative_speed'].max(),
-        # 'relative_speed_mean': df['relative_speed'].mean(),
-        # 'relative_speed_std': df['relative_speed'].std(),
+        'relative_speed_mean': df['relative_speed'].mean(),
+        'relative_speed_std': df['relative_speed'].std(),
         # 'train_target_speed_mean': df['train_target_speed'].mean(),
         # 'target_speed_mean': df['target_speed'].mean(),
         'distance_max': df['distance'].max(),

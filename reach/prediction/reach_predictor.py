@@ -87,7 +87,16 @@ def predict_reach(model_path, input_csv, threshold=0.75, distance_threshold=3, m
 if __name__ == "__main__":
     # 示例调用
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    model_file = os.path.join(base_path, "model", "reach_detect_1084_model.joblib")
+    model_file = os.path.join(base_path, "model", "reach_detect_1494_model.joblib")
     test_csv = "/Users/pengyue/Documents/GitHub/MagicShield/reach/data/original_csv/test/21196695.csv"
     # test_csv = os.path.join(base_path, "data", "original_csv", "hack", "netease7e491a09", "20810041.csv")  # 一个完整回放
-    predict_reach(model_file, test_csv, threshold=0.7, distance_threshold=3)
+    # predict_reach(model_file, test_csv, threshold=0.7, distance_threshold=3)
+    hack_count = 0
+    file_count = 0
+    for root, dirs, files in os.walk("/Users/pengyue/Documents/GitHub/MagicShield/reach/data/original_csv/test"):
+        # file_count += len(files)
+        for file in files:
+            if file.endswith(".csv"):
+                file_count += 1
+                hack_count += predict_reach(model_file, os.path.join(root, file), threshold=0.7, distance_threshold=3)
+    print(f"Hack Count: {hack_count}, Total Files: {file_count}")
