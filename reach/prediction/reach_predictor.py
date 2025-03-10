@@ -88,6 +88,6 @@ if __name__ == "__main__":
     # 示例调用
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     model_file = os.path.join(base_path, "model", "reach_detect_1084_model.joblib")
-    test_csv = "/Users/pengyue/Documents/GitHub/MagicShield/reach/data/original_csv/test/21106652.csv"
+    test_csv = "/Users/pengyue/Documents/GitHub/MagicShield/reach/data/original_csv/test/21196695.csv"
     # test_csv = os.path.join(base_path, "data", "original_csv", "hack", "netease7e491a09", "20810041.csv")  # 一个完整回放
     predict_reach(model_file, test_csv, threshold=0.7, distance_threshold=3)

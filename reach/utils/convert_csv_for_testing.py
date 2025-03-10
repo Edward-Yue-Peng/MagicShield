@@ -171,5 +171,5 @@ def process_replay_files(avro_dir, output_dir, train_target):
 if __name__ == "__main__":
     base_avro_dir = "../data/avro_data/test"  # 这是playback-process的小工具导出的文件
     base_output_dir = "../data/original_csv/test"  # 输出的原始csv
-    process_replay_files(base_avro_dir, base_output_dir, "netease58675735")
+    process_replay_files(base_avro_dir, base_output_dir, "_q1yue_")
     # 遍历 normal 和 hack 两个目录
