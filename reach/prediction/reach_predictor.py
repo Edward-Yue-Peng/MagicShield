@@ -4,10 +4,10 @@ import pandas as pd
 from joblib import load
 
 # 如果你有自己的特征提取函数
-from reach.utils.feature_extraction import extract_features
+from reach.utils.extract_features import extract_features
 
 
-def extract_segments_from_csv(csv_path, distance_threshold=3, min_ticks=10):
+def extract_segments_from_csv(csv_path, distance_threshold=3, min_ticks=8):
     """
     根据你给出的逻辑，对单个 CSV 做切分，返回若干符合条件(连续10tick且distance>3)的段 DataFrame 列表。
     """
@@ -32,7 +32,7 @@ def extract_segments_from_csv(csv_path, distance_threshold=3, min_ticks=10):
     return segments
 
 
-def predict_reach(model_path, input_csv, threshold=0.75, distance_threshold=3, min_ticks=10):
+def predict_reach(model_path, input_csv, threshold=0.75, distance_threshold=3, min_ticks=8):
     """
     使用训练好的模型，对单个「完整」CSV 进行切分 -> 特征提取 -> 预测。
     只要任意一个段被判定为作弊，则最终结果为作弊。
@@ -46,6 +46,7 @@ def predict_reach(model_path, input_csv, threshold=0.75, distance_threshold=3, m
         distance_threshold=distance_threshold,
         min_ticks=min_ticks
     )
+    print(segments)
     if not segments:
         # 如果没有切到任何符合条件的段，根据业务需求自行处理
         print("No valid segments found in this CSV. Default to 'normal' or skip.")
@@ -62,13 +63,12 @@ def predict_reach(model_path, input_csv, threshold=0.75, distance_threshold=3, m
         feats = extract_features(temp_csv_path)
         if feats is None or feats.empty:
             continue  # 跳过无效段
-
         # 可能 feats 还会返回多行，这里假设只返回 1 行
         # 如果返回多行，你可自行聚合或只取第一行
         # 这里简单取全部行做预测，然后看是否有任意行判定为 hack
         y_prob = clf.predict_proba(feats)[:, 1]
+        print(f"Segment {i} predicted probabilities: {y_prob}")
         y_pred_thresh = (y_prob >= threshold).astype(int)
-
         if (y_pred_thresh == 1).any():
             # 只要其中一个行判断为hack，整段就算hack
             is_hack = True
@@ -87,7 +87,7 @@ def predict_reach(model_path, input_csv, threshold=0.75, distance_threshold=3, m
 if __name__ == "__main__":
     # 示例调用
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    model_file = os.path.join(base_path, "model", "reach_detect_672_model_2025-03-09_13-37-52.joblib")  # 示例
-    test_csv = "/Users/pengyue/Documents/GitHub/MagicShield/reach/data/original_csv/normal/netease960524a8/17807926.csv"
+    model_file = os.path.join(base_path, "model", "reach_detect_1084_model.joblib")
+    test_csv = "/Users/pengyue/Documents/GitHub/MagicShield/reach/data/original_csv/test/21106652.csv"
     # test_csv = os.path.join(base_path, "data", "original_csv", "hack", "netease7e491a09", "20810041.csv")  # 一个完整回放
-    predict_reach(model_file, test_csv, threshold=0.75, distance_threshold=3, min_ticks=10)
+    predict_reach(model_file, test_csv, threshold=0.7, distance_threshold=3)

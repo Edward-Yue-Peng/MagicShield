@@ -36,17 +36,21 @@ def extract_features(csv_path):
 
     # 计算全局特征
     features = {
-        'tick_range': df['tick'].max() - df['tick'].min(),
-        'tick_count': len(df)
+        'distance_max': df['distance'].max(),
+        'distance_mean': df['distance'].mean(),
+        'distance_std': df['distance'].std(),
+        'tick': (df['tick'].max() - df['tick'].min()) / df['tick'].count(),
+        'train_target_ping_std': df['train_target_ping'].std(),
+        'target_ping_std': df['target_ping'].std(),
+        'train_target_ping_max': df['train_target_ping'].max(),
+        'target_ping_max': df['target_ping'].max(),
+        'train_target_yaw_std': df['train_target_yaw'].std(),
+        'target_yaw_std': df['target_yaw'].std(),
+        'target_pitch_std': df['target_pitch'].std(),
+        'train_target_pitch_std': df['target_pitch'].std(),
     }
-
     # 对每个数值列计算统计特征
-    for col in numeric_cols:
-        features[f"{col}_min"] = df[col].min()
-        features[f"{col}_max"] = df[col].max()
-        features[f"{col}_mean"] = df[col].mean()
-        features[f"{col}_std"] = df[col].std()
-    # 对于 target_player 列，直接取第一行的值
+    # print(features)
     return pd.DataFrame([features])
 
 

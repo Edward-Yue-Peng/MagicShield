@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 
 # 你自己的特征提取函数
-from reach.utils.feature_extraction import extract_features
+from reach.utils.extract_features import extract_features
 
 
 def parse_replay_id(filename):
@@ -134,7 +134,8 @@ def train_reach(data_folder_path, threshold=0.75):
 
     # 10. 导出模型
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    model_filename = f"reach_detect_{len(data)}_model_{timestamp}.joblib"
+    # model_filename = f"reach_detect_{len(data)}_model_{timestamp}.joblib"
+    model_filename = f"reach_detect_{len(data)}_model.joblib"
     model_folder = os.path.join(data_folder_path, "model")
     os.makedirs(model_folder, exist_ok=True)
     model_filepath = os.path.join(model_folder, model_filename)
@@ -145,4 +146,4 @@ def train_reach(data_folder_path, threshold=0.75):
 if __name__ == "__main__":
     # 示例调用
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    train_reach(base_path, threshold=0.7)
+    train_reach(base_path, threshold=0.6)

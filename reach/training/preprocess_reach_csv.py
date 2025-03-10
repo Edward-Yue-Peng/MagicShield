@@ -66,5 +66,5 @@ if __name__ == "__main__":
             input_folder_path=input_folder,
             output_folder_path=output_folder,
             distance_threshold=3,
-            min_ticks=10
+            min_ticks=8
         )
