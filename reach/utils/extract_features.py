@@ -4,16 +4,8 @@ import pandas as pd
 def extract_features(csv_path):
     """
     读取完整 CSV 并针对整份数据提取统计特征。
-
-    处理的列：
-        - tick, distance, train_target_ping, train_target_yaw, train_target_pitch,
-          target_yaw, target_pitch, target_ping 作为数值列计算 min, max, mean, std
-        - tick_range = max(tick) - min(tick)
-        - tick_count = 数据行数
-        - target_player 直接取第1行的值（假定该列为字符串）
-
-    返回:
-        - DataFrame (单行), 每列对应一种特征
+    :param csv_path: csv 文件路径
+    :return: 包含特征的 DataFrame
     """
     try:
         df = pd.read_csv(csv_path)
@@ -21,7 +13,6 @@ def extract_features(csv_path):
         print(f"Failed to read file {csv_path}: {e}")
         return None
 
-    # 数值列列表（不包括 target_player）
     numeric_cols = [
         'tick', 'distance', 'train_target_ping', 'train_target_yaw', 'train_target_pitch',
         'target_yaw', 'target_pitch', 'target_ping', 'relative_speed', 'train_target_speed', 'target_speed'
@@ -34,7 +25,7 @@ def extract_features(csv_path):
         else:
             df[col] = 0
 
-    # 计算全局特征
+    # 提取特征
     features = {
         # 'relative_speed_max': df['relative_speed'].max(),
         'relative_speed_mean': df['relative_speed'].mean(),
@@ -54,13 +45,4 @@ def extract_features(csv_path):
         'target_pitch_std': df['target_pitch'].std(),
         'train_target_pitch_std': df['target_pitch'].std(),
     }
-    # 对每个数值列计算统计特征
-    # print(features)
     return pd.DataFrame([features])
-
-
-# 测试示例：
-if __name__ == "__main__":
-    csv_file = "/Users/pengyue/Documents/GitHub/MagicShield/reach/data/processed_csv/hack/20809055_segment_1.csv"
-    features_df = extract_features(csv_file)
-    print(features_df)

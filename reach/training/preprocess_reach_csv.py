@@ -4,31 +4,27 @@ import pandas as pd
 
 
 def extract_high_distance_segments_recursive(input_folder_path, output_folder_path,
-                                             distance_threshold=3, min_ticks=10):
+                                             distance_threshold, min_ticks):
     """
-    递归遍历 input_folder_path 下的所有子文件夹，处理每个 CSV 文件，
-    将符合条件的段切分并统一输出到 output_folder_path 下。
-    input_folder_path: 输入文件夹路径
-    output_folder_path: 输出文件夹路径
-    distance_threshold: 距离阈值
-    min_ticks: 最小段长度
+    递归遍历 input_folder_path 下所有文件，提取每个文件中的异常攻击距离片段
+    :param input_folder_path: 输入文件夹路径（original）
+    :param output_folder_path: 输出文件夹路径（processed）
+    :param distance_threshold: 攻击阈值（应该为3）
+    :param min_ticks: 最小连续超过攻击距离3的tick数
+    :return: 直接处理文件，输出到 output_folder_path
     """
     if not os.path.exists(output_folder_path):
         os.makedirs(output_folder_path)
-
     file_count = 0
     segment_count = 0
-
     # 递归遍历 input_folder_path 下所有文件
     for root, dirs, files in os.walk(input_folder_path):
         for filename in files:
             if filename.endswith(".csv"):
                 file_count += 1
                 file_path = os.path.join(root, filename)
-
                 df = pd.read_csv(file_path)
                 df = df.sort_values(by='tick')
-
                 segments = []
                 current_segment = []
 
@@ -55,9 +51,14 @@ def extract_high_distance_segments_recursive(input_folder_path, output_folder_pa
     print(f"Processed {segment_count} segments in total.")
 
 
-if __name__ == "__main__":
+def preprocess_reach_csv(min_ticks_per_segment):
+    """
+    预处理所有原始 CSV 文件，提取高攻击距离片段
+    :param min_ticks_per_segment: 最小连续超过攻击距离3的tick数
+    :return: 直接操作文件
+    """
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    # hack 和 normal 一起处理
+    # hack 和 normal 分别处理
     for subdir in ["hack", "normal"]:
         input_folder = os.path.join(base_path, "data", "original_csv", subdir)
         output_folder = os.path.join(base_path, "data", "processed_csv", subdir)
@@ -66,5 +67,5 @@ if __name__ == "__main__":
             input_folder_path=input_folder,
             output_folder_path=output_folder,
             distance_threshold=3,
-            min_ticks=8
+            min_ticks=min_ticks_per_segment
         )

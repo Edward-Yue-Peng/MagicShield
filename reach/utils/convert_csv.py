@@ -8,9 +8,12 @@ from fastavro import schemaless_reader
 
 def process_attack_events(data_dict, train_target_ecid, pair_dict):
     """
-    提取训练reach需要的信息，传入train_target，返回攻击事件的相关信息。
-    根据所有 tick 的上一个 tick 的位置差计算速度和速度向量（单位：距离/20tick，即瞬时速度乘以20），
-    同时计算 train_target 的速度、target 的速度及它们的相对速度（三维空间）。
+    提取训练长臂需要的信息，传入训练目标（也就是要提取谁的信息），返回攻击事件的相关信息。
+    根据原始的数据计算速度、速度向量、相对速度和距离。
+    :param data_dict: avro文件（已经解析为字典）
+    :param train_target_ecid: 训练目标
+    :param pair_dict: 玩家名与entityID配对的字典
+    :return: 一个包含攻击事件信息的列表
     """
     ticks = data_dict.get("ticks", [])
     results = []
@@ -61,11 +64,11 @@ def process_attack_events(data_dict, train_target_ecid, pair_dict):
                     current_known.setdefault(player, {})
                     current_known[player]["ping"] = updated.get("ping", "")
 
-                # 收集 train_target 的攻击事件
+                # 收集训练目标的攻击事件
                 if player == train_target_ecid and "attackTarget" in updated:
                     attack_events.append(event)
 
-        # 若本 tick 中 train_target 存在攻击事件，则生成对应记录
+        # 若本 tick 中训练目标存在攻击事件，才开始记录
         if attack_events:
             for event in attack_events:
                 updated = event.get("updated", {})
@@ -97,7 +100,7 @@ def process_attack_events(data_dict, train_target_ecid, pair_dict):
                 else:
                     distance = ""
 
-                # 计算相对速度：若两者都有速度向量，则为两速度向量差的模
+                # 计算相对速度
                 if attacker_vel is not None and target_vel is not None:
                     rel_vel = (attacker_vel[0] - target_vel[0],
                                attacker_vel[1] - target_vel[1],
@@ -106,6 +109,7 @@ def process_attack_events(data_dict, train_target_ecid, pair_dict):
                 else:
                     relative_speed = ""
 
+                # 写入
                 record = {
                     "tick": tick,
                     "train_target_yaw": attacker_rot[0] if attacker_rot else "",
@@ -121,14 +125,17 @@ def process_attack_events(data_dict, train_target_ecid, pair_dict):
                     "distance": distance
                 }
                 results.append(record)
-        # 当前 tick 完成后，将状态保存作为下一 tick 的初始状态
+        # 当前 tick 完成后，将状态保存作为下一 tick 的初始状态（因为回放只记录更新记录而不是持续状态）
         prev_known = {player: info.copy() for player, info in current_known.items()}
     return results
 
 
 def write_attack_events(records, csv_filepath):
     """
-    将 attack 事件写入 csv 文件
+    将攻击事件写入 csv 文件
+    :param records: 攻击事件的列表
+    :param csv_filepath: 输出的文件路径
+    :return:
     """
     if not records:
         print(f"{csv_filepath}: No attack event data found!")
@@ -150,7 +157,10 @@ def write_attack_events(records, csv_filepath):
 
 def avro_reader(avro_filepath, schema_filepath):
     """
-    打开 avro 和 avsc 文件
+    读取 avro 文件
+    :param avro_filepath: avro 文件路径
+    :param schema_filepath: schema 文件路径（avsc文件）
+    :return: 解码后的 avro 数据
     """
     with open(schema_filepath, "r", encoding="utf-8") as schema_file:
         schema = json.load(schema_file)
@@ -162,6 +172,8 @@ def avro_reader(avro_filepath, schema_filepath):
 def metadata_reader(metadata_filepath):
     """
     读取 metadata 文件
+    :param metadata_filepath: metadata 文件路径（json文件）
+    :return: 读取后的json文件
     """
     with open(metadata_filepath, "r", encoding="utf-8") as f:
         metadata = json.load(f)
@@ -170,7 +182,9 @@ def metadata_reader(metadata_filepath):
 
 def pair_entity_id(metadata_dict):
     """
-    根据 metadata 中的玩家信息，生成 entityID 与玩家名的映射字典
+    从 metadata 中提取玩家名与 entityID 的映射关系的字典
+    :param metadata_dict: metadata 文件
+    :return: entityID 与玩家名的映射字典
     """
     pair_dict = {}
     for player in metadata_dict.get("players", []):
@@ -181,6 +195,10 @@ def pair_entity_id(metadata_dict):
 def process_replay_files(avro_dir, output_dir, train_target):
     """
     处理给定目录下的所有 .avro 文件，并将生成的 CSV 写入 output_dir
+    :param avro_dir: avro 文件目录
+    :param output_dir: 输出的 CSV 文件目录（original）
+    :param train_target: 训练目标
+    :return: 直接操作文件
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -213,24 +231,3 @@ def process_replay_files(avro_dir, output_dir, train_target):
     print("Lack of schema or metadata files:", lack_schema)
     print("Successfully processed files:", success)
     print("Files without attack data:", no_attack_data)
-
-
-if __name__ == "__main__":
-    base_avro_dir = "../data/avro_data"  # 这是 playback-process 小工具导出的文件
-    base_output_dir = "../data/original_csv"  # 输出的原始 csv
-
-    # 遍历 normal 和 hack 两个目录
-    for subdir in ["normal", "hack"]:
-        subdir_path = os.path.join(base_avro_dir, subdir)
-        output_subdir = os.path.join(base_output_dir, subdir)
-        # 遍历 normal/hack 下的所有子文件夹（以 ecid 命名）
-        for folder in os.listdir(subdir_path):
-            folder_path = os.path.join(subdir_path, folder)
-            # 确保是子文件夹
-            if os.path.isdir(folder_path):
-                # 将该子文件夹的名字作为 train_target
-                train_target = folder
-                # 对应输出目录
-                output_folder = os.path.join(output_subdir, folder)
-                print(f"Start processing: {folder_path}")
-                process_replay_files(folder_path, output_folder, train_target)
