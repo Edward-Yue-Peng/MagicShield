@@ -1,7 +1,6 @@
 import glob
 import os
 import re
-from datetime import datetime
 
 import pandas as pd
 from joblib import dump
@@ -66,9 +65,11 @@ def load_segment_dataset(data_folder_path):
     return pd.concat(data_list, ignore_index=True)
 
 
-def train_reach(threshold, data_folder_path=os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))):
+def train_reach(threshold, misclassified_path,
+                data_folder_path=os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))):
     """
     训练模型
+    :param misclassified_path: 错误分类的回放号保存路径
     :param threshold: 判断阈值（概率）
     :param data_folder_path: 包含 processed_csv/hack 和 processed_csv/normal 的根目录
     :return: 打印并保存文件
@@ -122,7 +123,6 @@ def train_reach(threshold, data_folder_path=os.path.abspath(os.path.join(os.path
 
     # 9. 保存被错误分类的回放号
     misclassified_df = df_file_level[df_file_level["true_label"] != df_file_level["pred_label"]]
-    misclassified_path = os.path.join(data_folder_path, "data", "misclassified_files.csv")
     misclassified_df.to_csv(misclassified_path, index=False)
     print(f"Misclassified files saved to: {misclassified_path}")
 

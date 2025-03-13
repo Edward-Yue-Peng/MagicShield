@@ -231,3 +231,21 @@ def process_replay_files(avro_dir, output_dir, train_target):
     print("Lack of schema or metadata files:", lack_schema)
     print("Successfully processed files:", success)
     print("Files without attack data:", no_attack_data)
+
+
+def convert_csv_for_training(base_avro_dir, base_output_dir):
+    # 遍历 normal 和 hack 两个目录
+    for subdir in ["normal", "hack"]:
+        subdir_path = os.path.join(base_avro_dir, subdir)
+        output_subdir = os.path.join(base_output_dir, subdir)
+        # 遍历 normal/hack 下的所有子文件夹（以 ecid 命名）
+        for folder in os.listdir(subdir_path):
+            folder_path = os.path.join(subdir_path, folder)
+            # 确保是子文件夹
+            if os.path.isdir(folder_path):
+                # 将该子文件夹的名字作为 train_target
+                train_target = folder
+                # 对应输出目录
+                output_folder = os.path.join(output_subdir, folder)
+                print(f"Start processing: {folder_path}")
+                process_replay_files(folder_path, output_folder, train_target)
