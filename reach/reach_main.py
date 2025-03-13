@@ -9,7 +9,7 @@ test_csv_dir = "./data/original_csv/test"
 
 # 预测路径（对大量玩家判断）
 predict_avro_dir = "./data/avro_data/predict"
-predict_csv_dir = "./data/original_csv/predict"
+predict_csv_dir = "./data/processed_csv/predict"
 
 # 训练路径
 avro_dir = "./data/avro_data"

@@ -131,8 +131,7 @@ def predict_with_tick_range(model_path, input_csv, threshold, min_ticks, distanc
     return False, None
 
 
-# 辅助函数：处理单个回放文件（predict 文件夹下），为每个玩家生成攻击数据 CSV
-def process_predict_replay_file(avro_dir, filename, output_base_dir):
+def process_predict_replay_file(avro_dir, filename, output_base_dir, replay_game_dict):
     """
     对单个回放文件进行处理，生成该回放下所有玩家的攻击数据 CSV。
     输出路径：output_base_dir/{replay_id}/{player_ecid}.csv
@@ -154,7 +153,8 @@ def process_predict_replay_file(avro_dir, filename, output_base_dir):
     avro_data = avro_reader(avro_filepath, schema_filepath)
     metadata = metadata_reader(metadata_filepath)
     pair_dict = pair_entity_id(metadata)
-
+    game_type = metadata.get("game", "")
+    replay_game_dict[replay_id] = game_type
     players = metadata.get("players", [])
     processed_ecids = set()
     for player in players:
@@ -172,18 +172,16 @@ def process_predict_replay_file(avro_dir, filename, output_base_dir):
         success = write_attack_events(records, output_csv)
         if success:
             print(f"Generated attack data: {output_csv}")
-        else:
-            print(f"{output_csv}: No attack data")
 
 
-# 遍历 predict 文件夹下所有回放目录，对每个玩家 CSV 进行预测
-def predict_hack_from_csv_files(model_path, csv_base_dir, threshold, min_ticks):
+def predict_hack_from_csv_files(model_path, csv_base_dir, threshold, min_ticks, replay_game_dict):
     """
     遍历 csv_base_dir 下的每个回放目录，对其中每个玩家 CSV 调用预测函数。
     :param model_path: 模型路径
     :param csv_base_dir: csv 文件目录
     :param threshold: 判断阈值
     :param min_ticks: 最小连续异常攻击距离数
+    :param replay_game_dict: 回放号到游戏类型 的映射
     :return: 一条数据，包含ecid，回放号，可以片段
     """
     results = []
@@ -203,7 +201,8 @@ def predict_hack_from_csv_files(model_path, csv_base_dir, threshold, min_ticks):
                 results.append({
                     "ecid": player_ecid,
                     "replay_id": replay_id,
-                    "tick_range": tick_range_str
+                    "tick_range": tick_range_str,
+                    "game": replay_game_dict.get(replay_id, "")
                 })
     return results
 
@@ -215,7 +214,7 @@ def write_suspected_hacks(results, output_file):
     :param output_file: csv输出路径
     :return: 直接操作文件
     """
-    header = ["ecid", "replay_id", "tick_range"]
+    header = ["ecid", "replay_id", "tick_range", "game"]
     with open(output_file, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=header)
         writer.writeheader()
@@ -238,14 +237,17 @@ def predict_reach_large_scale(avro_predict_dir, output_csv_dir, predict_report_d
     :param predict_min_ticks: 最小连续异常攻击距离数
     :return: 操作文件
     """
+    # 保存回放号和游戏类型的映射
+    replay_game_dict = {}
 
     # 1. 处理每个 avro 文件
     for filename in os.listdir(avro_predict_dir):
         if filename.endswith(".avro"):
-            process_predict_replay_file(avro_predict_dir, filename, output_csv_dir)
+            process_predict_replay_file(avro_predict_dir, filename, output_csv_dir, replay_game_dict)
 
     # 2. 遍历生成的 CSV 文件并进行预测
-    results = predict_hack_from_csv_files(model_path, output_csv_dir, predict_threshold, predict_min_ticks)
+    results = predict_hack_from_csv_files(model_path, output_csv_dir, predict_threshold, predict_min_ticks,
+                                          replay_game_dict)
 
     # 3. 写入疑似 hack 的结果到 CSV 文件
     write_suspected_hacks(results, predict_report_dir)
