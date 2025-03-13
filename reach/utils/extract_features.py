@@ -1,18 +1,23 @@
 import pandas as pd
 
 
-def extract_features(csv_path):
+def extract_features(csv_data):
     """
     读取完整 CSV 并针对整份数据提取统计特征。
-    :param csv_path: csv 文件路径
+    :param csv_data: csv 文件路径或DataFrame文件
     :return: 包含特征的 DataFrame
     """
-    try:
-        df = pd.read_csv(csv_path)
-    except Exception as e:
-        print(f"Failed to read file {csv_path}: {e}")
-        return None
-
+    if isinstance(csv_data, str):
+        try:
+            df = pd.read_csv(csv_data)
+        except Exception as e:
+            print(f"Failed to read file {csv_data}: {e}")
+            return None
+    elif isinstance(csv_data, pd.DataFrame):
+        df = csv_data
+    else:
+        print(f"Failed to read file {csv_data}: {type(csv_data)}")
+        
     numeric_cols = [
         'tick', 'distance', 'train_target_ping', 'train_target_yaw', 'train_target_pitch',
         'target_yaw', 'target_pitch', 'target_ping', 'relative_speed', 'train_target_speed', 'target_speed'

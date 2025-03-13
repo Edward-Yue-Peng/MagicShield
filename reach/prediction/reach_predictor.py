@@ -53,9 +53,7 @@ def predict_reach_module(model_path, input_csv, threshold, min_ticks, distance_t
 
     is_hack = False
     for i, seg_df in enumerate(segments, start=1):
-        temp_csv_path = "temp_segment.csv"
-        seg_df.to_csv(temp_csv_path, index=False)
-        feats = extract_features(temp_csv_path)
+        feats = extract_features(seg_df)
         if feats is None or feats.empty:
             continue
         y_prob = clf.predict_proba(feats)[:, 1]
@@ -115,14 +113,13 @@ def predict_with_tick_range(model_path, input_csv, threshold, min_ticks, distanc
         return False, None
 
     for i, seg_df in enumerate(segments, start=1):
-        temp_csv_path = "temp_segment.csv"
-        seg_df.to_csv(temp_csv_path, index=False)
-        feats = extract_features(temp_csv_path)
+        feats = extract_features(seg_df)
         if feats is None or feats.empty:
             continue  # 跳过无效段
         y_prob = clf.predict_proba(feats)[:, 1]
         print(f"The probability of segment {i} in {input_csv}: {y_prob}")
         y_pred_thresh = (y_prob >= threshold).astype(int)
+
         if (y_pred_thresh == 1).any():
             min_tick = seg_df['tick'].min()
             max_tick = seg_df['tick'].max()
