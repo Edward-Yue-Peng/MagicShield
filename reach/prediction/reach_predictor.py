@@ -80,7 +80,7 @@ def predict_reach(predict_path, model_file, predict_threshold, predict_min_ticks
     :param model_file: 模型路径
     :param predict_threshold: 判断阈值
     :param predict_min_ticks: 最小连续异常攻击距离数
-    :return: 直接打印贩毒案结果
+    :return: 直接打印判断结果
     """
     hack_count = 0
     file_count = 0
